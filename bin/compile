@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir>
+
+# fail fast
+set -e
+
+# debug
+# set -x
+
+# clean up leaking environment
+unset GIT_DIR
+
+# parse and derive params
+BUILD_DIR=$1
+CACHE_DIR=$2
+BUILDPACK_DIR="$(dirname $(dirname $0))"
+
+# config
+POSTGIS_VERSION=2.5.2
+POSTGIS_DOWNLOAD_URL="https://s3.eu-central-1.amazonaws.com/docs.riskmethods.net/postgis.tar.gz"
+POSTGIS_DEPENDENCIES_DOWNLOAD_URL="https://s3.eu-central-1.amazonaws.com/docs.riskmethods.net/postgis-dependencies.tar.gz"
+
+echo "-----> Downloading postgis"
+
+cd $BUILD_DIR
+
+curl $POSTGIS_DOWNLOAD_URL -s -o - | tar xzf -
+curl $POSTGIS_DEPENDENCIES_DOWNLOAD_URL -s -o - | tar xzf -
+
+echo "-----> postgis downloaded"
+echo "-----> installing postgis"
+
+cd postgis-${POSTGIS_VERSION} && make install
+cd extensions/postgis && make install
+
+VENDOR_DIR=$BUILD_DIR/.indyno/vendor
+POSTGIS_VENDOR_DIR=$VENDOR_DIR/postgis-dependencies
+
+
+mv $BUILD_DIR/postgis-dependencies/ $BUILD_DIR/.indyno/vendor
+
+echo "-----> postgis installed"
+
+cd $BUILD_DIR
+
+# add .profile.d file so dyno will see installed libraries
+
+cat<<\EOF > $BUILD_DIR/.profile.d/0000-postgis-env.sh
+export LD_LIBRARY_PATH="$POSTGIS_VENDOR_DIR/lib:$LD_LIBRARY_PATH"
+EOF
+
+
+echo "export LD_LIBRARY_PATH=$POSTGIS_VENDOR_DIR/lib:$LD_LIBRARY_PATH" >> $BUILDPACK_DIR/export
+
+# restart postgresql so next buildpacks will see installed libraries
+# this /background stuff is not documented by heroku in any way!!!
+
+cat<<EOF > $BUILDPACK_DIR/background
+export LD_LIBRARY_PATH=$POSTGIS_VENDOR_DIR/lib:$LD_LIBRARY_PATH
+PATH=$HOME/.indyno/vendor/postgresql/bin:$PATH
+export PGHOST="$PGHOST"
+export DATABASE_URL="$DATABASE_URL"
+export PGHOST=/tmp
+export PGDATA=$HOME/.indyno/vendor/postgresql/data
+pg_ctl -w restart >/dev/null
+EOF
+
+echo "-----> postgis done"
