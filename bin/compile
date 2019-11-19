@@ -17,8 +17,8 @@ BUILDPACK_DIR="$(dirname $(dirname $0))"
 
 # config
 POSTGIS_VERSION=2.5.2
-POSTGIS_DOWNLOAD_URL="https://s3.eu-central-1.amazonaws.com/docs.riskmethods.net/postgis.tar.gz"
-POSTGIS_DEPENDENCIES_DOWNLOAD_URL="https://s3.eu-central-1.amazonaws.com/docs.riskmethods.net/postgis-dependencies.tar.gz"
+POSTGIS_DOWNLOAD_URL="https://s3.eu-central-1.amazonaws.com/docs.riskmethods.net/postgis-11.tar.gz"
+POSTGIS_DEPENDENCIES_DOWNLOAD_URL="https://s3.eu-central-1.amazonaws.com/docs.riskmethods.net/postgis-dependencies-11.tar.gz"
 
 echo "-----> Downloading postgis"
 

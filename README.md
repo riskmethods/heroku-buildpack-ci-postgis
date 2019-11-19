@@ -1,22 +1,22 @@
 # Heroku CI buildpack: Postgis
 
-- Postgis 2.5.2 for postgresql 9.6.*
+- Postgis 2.5.2 for postgresql 11.5.*
 - Proj 4.9.2
 - Geos 3.7.2
 - without raster support!
 
-## How does it works?
+## How does it work?
 
-- first somebody builds docker image using Dockerfile inside `support` dir
-- this image will contains two tar.gz files: `postgis` and `postgis-dependencies`
+- One needs to build docker image using Dockerfile inside `support` dir
+- The image will contain two `tar.gz` files: `postgis` and `postgis-dependencies`
 - `postgis`: contains precomplied postgis lib, ready to be installed inside `/app/.indyno/vendor/postgresql/` dir
 - `postgis-dependencies`: contains precomplied and installed libs: `proj` and `geos`.
-- then somebody needs to get that files from docker container and move it to S3 bucket (`docs.riskmethods.net`)
-- during compliation stage this buildpack will fetch this 2 files from S3 bucket and install it inside dyno. 
+- One needs to get files from docker container and move it to S3 bucket (`docs.riskmethods.net`)
+- During compliation stage this buildpack will fetch those 2 files from S3 bucket and install it inside the dyno.
 
 ## Usage
 
-Just add it to app.json definition, like:
+Just add it to `app.json` definition, like:
 
 ```json
  "environments": {
@@ -26,13 +26,13 @@ Just add it to app.json definition, like:
         { "url": "heroku/nodejs"},
         { "url": "heroku/ruby" }
       ],
-      "env": {  "POSTGRESQL_VERSION": "9.6" },
+      "env": {  "POSTGRESQL_VERSION": "11.5" },
       "addons": ["heroku-postgresql:in-dyno"]
     }
   }
 ```
 
-Note this buildpack should be before ruby buildpack
+Note: this buildpack should be added before ruby buildpack
 
 ## Compiling libs and putting them in S3
 
@@ -42,7 +42,7 @@ docker build . -t heroku-postgis
 docker run -it  heroku-postgis bash
 ```
 
-(in other terminal:)
+Save container ID, open another terminal window and run:
 
 ```bash
 docker cp {id-of-container}:/postgis-dependencies.tar.gz .
